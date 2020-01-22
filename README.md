@@ -7,5 +7,7 @@ The second course covers more complex topics such as HATEOAS(Hypermedia as the E
 This is not an original project and I do not claim any of this code as my own. I was merely following along with the courses and wanted to save my own documented version for future reference. If you would like to see the original code as writtin by Kevin Dockx you can find it at [this]() link.
 
 ## Reference
+
 [RESTful API w/ASP.NET Core 3](https://app.pluralsight.com/library/courses/asp-dot-net-core-3-restful-api-building/description)
+
 [Advanced RSETful API Concerns Course](https://app.pluralsight.com/library/courses/asp-dot-net-core-3-advanced-restful-concerns/description)
