@@ -59,6 +59,8 @@ namespace CourseLibrary.API
 
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
 
+            services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
+
             services.AddAutoMapper(System.AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddScoped<ICourseLibraryRepository, CourseLibraryRepository>();
