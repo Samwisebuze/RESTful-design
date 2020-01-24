@@ -22,44 +22,64 @@ namespace CourseLibrary.API.Controllers
     public class CoursesController : ControllerBase // We can also inherit Controller, but that adds view support which is not necessary 
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
+        private readonly IPropertyMappingService _propertyMappingService;
+        private readonly IPropertyCheckerService _propertyCheckerService;
         private readonly IMapper _mapper;
 
-        public CoursesController(ICourseLibraryRepository courseLibraryRepository, IMapper mapper)
+        public CoursesController(
+            ICourseLibraryRepository courseLibraryRepository, 
+            IMapper mapper,
+            IPropertyCheckerService propertyCheckerService,
+            IPropertyMappingService propertyMappingService)
         {
             _courseLibraryRepository = courseLibraryRepository ??
                 throw new ArgumentNullException(nameof(courseLibraryRepository));
             _mapper = mapper ??
                 throw new ArgumentNullException(nameof(mapper));
+            _propertyCheckerService = propertyCheckerService ??
+                throw new ArgumentNullException(nameof(propertyCheckerService));
+            _propertyMappingService = propertyMappingService ??
+                throw new ArgumentNullException(nameof(propertyMappingService));
         }
 
-        [HttpGet]
-        public ActionResult<IEnumerable<CourseDto>> GetCoursesForAuthor(Guid authorId)
+        [HttpGet(Name = "GetCoursesForAuthor")]
+        [HttpHead]
+        public IActionResult GetCoursesForAuthor(
+            [FromRoute]Guid authorId,
+            [FromQuery]string fields)
         {
-            if (!_courseLibraryRepository.AuthorExists(authorId))
-            {
+            if (!AuthorExists(authorId))
                 return NotFound();
-            }
 
+            if (!_propertyCheckerService.TypeHasProperties<CourseDto>(fields))
+                return BadRequest();
+
+            // TODO: Add Courses Pagination
             IEnumerable<Course> coursesFromRepo = _courseLibraryRepository.GetCourses(authorId);
 
-            return Ok(_mapper.Map<IEnumerable<Course>>(coursesFromRepo));
+            return Ok(_mapper.Map<IEnumerable<Course>>(coursesFromRepo).ShapeData(fields));
         }
 
 
         [HttpGet("{courseId:guid}", Name = "GetCourseForAuthor")]
-        public ActionResult<CourseDto> GetCourseForAuthor(
+        [HttpHead]
+        public IActionResult GetCourseForAuthor(
             [FromRoute]Guid authorId,
-            [FromRoute]Guid courseId)
+            [FromRoute]Guid courseId,
+            [FromQuery]string fields)
         {
-            if (!_courseLibraryRepository.AuthorExists(authorId))
+            if (!AuthorExists(authorId))
                 return NotFound();
+
+            if (!_propertyCheckerService.TypeHasProperties<CourseDto>(fields))
+                return BadRequest();
 
             var courseFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
 
             if (courseFromRepo == null)
                 return NotFound();
 
-            return Ok(_mapper.Map<CourseDto>(courseFromRepo));
+            return Ok(_mapper.Map<CourseDto>(courseFromRepo).ShapeData(fields));
         }
 
         [HttpPost]

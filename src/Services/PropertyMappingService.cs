@@ -17,11 +17,22 @@ namespace CourseLibrary.API.Services
                 {"Name", new PropertyMappingValue(new List<string>(){ "FirstName", "LastName"} )},
             };
 
+        private Dictionary<string, PropertyMappingValue> _coursePropertyMapping =
+            new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
+            {
+                {"Id", new PropertyMappingValue(new List<string>(){ "Id"} )},
+                {"Title", new PropertyMappingValue(new List<string>(){ "Title"} )},
+                {"Description", new PropertyMappingValue(new List<string>(){ "Description"} )},
+                {"AuthorId", new PropertyMappingValue(new List<string>(){ "AuthorId" } )},
+            };
+
+
         private IList<IPropertyMapping> _propertyMappings = new List<IPropertyMapping>();
 
         public PropertyMappingService()
         {
              _propertyMappings.Add(new PropertyMapping<AuthorDto, Author>(_authorPropertyMapping));
+             _propertyMappings.Add(new PropertyMapping<CourseDto, Course>(_coursePropertyMapping));
         }
         public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>()
         {
