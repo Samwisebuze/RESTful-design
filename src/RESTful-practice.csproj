@@ -24,6 +24,7 @@
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.112.0" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112.0" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.20" />
   </ItemGroup>
 
 </Project>

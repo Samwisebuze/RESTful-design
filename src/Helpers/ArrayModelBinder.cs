@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace CourseLibrary.Helpers
+namespace CourseLibrary.API.Helpers
 {
     public class ArrayModelBinder : IModelBinder
     {

@@ -8,6 +8,7 @@ using CourseLibrary.API.ResourceParamaters;
 using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace CourseLibrary.API.Controllers
 {
@@ -19,15 +20,21 @@ namespace CourseLibrary.API.Controllers
     public class AuthorsController : ControllerBase // We can also inherit Controller, but that adds view support which is not necessary 
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
+        private readonly IPropertyMappingService _propertyMappingService;
         private readonly IMapper _mapper;
 
-        public AuthorsController(ICourseLibraryRepository courseLibraryRepository,
-            IMapper mapper)
+        public AuthorsController(
+            ICourseLibraryRepository courseLibraryRepository,
+            IMapper mapper,
+            IPropertyMappingService propertyMappingService)
         {
             _courseLibraryRepository = courseLibraryRepository ??
                 throw new ArgumentNullException(nameof(courseLibraryRepository));
             _mapper = mapper ??
                 throw new ArgumentNullException(nameof(mapper));
+            _propertyMappingService = propertyMappingService ??
+                throw new ArgumentNullException(nameof(propertyMappingService));
+
         }
 
         [HttpGet(Name = "GetAuthors")]
@@ -35,8 +42,31 @@ namespace CourseLibrary.API.Controllers
         public ActionResult<IEnumerable<Author>> GetAuthors(
             [FromQuery]AuthorsResourceParameters authorsResourceParamaters)
         {
-            IEnumerable<Author> authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParamaters);
+            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Entities.Author>(authorsResourceParamaters.OrderBy))
+                return BadRequest();
 
+            PagedList<Author> authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParamaters);
+
+            var previousPageLink = authorsFromRepo.HasPrevious ?
+                CreateAuthorsResourceUri(authorsResourceParamaters, 
+                ResourceUriType.PreviousPage) : null;
+            var nextPageLink = authorsFromRepo.HasNext ?
+                CreateAuthorsResourceUri(authorsResourceParamaters, 
+                ResourceUriType.NextPage) : null;
+
+            var paginationMetadata = new 
+            {
+                totalCount = authorsFromRepo.TotalCount,
+                totalPages = authorsFromRepo.TotalPages,
+                pageNumber = authorsFromRepo.CurrentPage,
+                pageSize = authorsFromRepo.PageSize,
+                previousPageLink,
+                nextPageLink
+            };
+
+            Response.Headers.Add("X-Pagination",
+                JsonSerializer.Serialize(paginationMetadata));
+                
             return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo));
         }
 
@@ -91,6 +121,45 @@ namespace CourseLibrary.API.Controllers
             _courseLibraryRepository.Save();
 
             return NoContent();
+        }
+
+        private string CreateAuthorsResourceUri(
+            AuthorsResourceParameters parameters,
+            ResourceUriType type)
+        {
+            switch (type)
+            {
+                case ResourceUriType.NextPage:
+                    return Url.Link("GetAuthors",
+                        new
+                        {
+                            orderBy = parameters.OrderBy,
+                            pageNumber = parameters.PageNumber + 1,
+                            pageSize = parameters.PageSize,
+                            mainCategory = parameters.MainCategory,
+                            searchQuery = parameters.SearchQuery
+                        });
+                case ResourceUriType.PreviousPage:
+                    return Url.Link("GetAuthors",
+                        new
+                        {
+                            orderBy = parameters.OrderBy,
+                            pageNumber = parameters.PageNumber - 1,
+                            pageSize = parameters.PageSize,
+                            mainCategory = parameters.MainCategory,
+                            searchQuery = parameters.SearchQuery
+                        });
+                default:
+                    return Url.Link("GetAuthors",
+                        new
+                        {
+                            orderBy = parameters.OrderBy,
+                            pageNumber = parameters.PageNumber,
+                            pageSize = parameters.PageSize,
+                            mainCategory = parameters.MainCategory,
+                            searchQuery = parameters.SearchQuery
+                        });
+            }
         }
 
     }

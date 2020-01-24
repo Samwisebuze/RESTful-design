@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using CourseLibrary.API.Entities;
+using CourseLibrary.API.Helpers;
 using CourseLibrary.API.Models;
 using CourseLibrary.API.Services;
-using CourseLibrary.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourseLibrary.API.Controllers
