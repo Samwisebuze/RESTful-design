@@ -82,7 +82,7 @@ namespace CourseLibrary.API.Controllers
             return Ok(_mapper.Map<CourseDto>(courseFromRepo).ShapeData(fields));
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateCourseForAuthor")]
         public ActionResult<CourseDto> CreateCourseForAuthor(
             [FromRoute]Guid authorId,
             [FromBody]CourseForCreationDto courseForCreationDto)
