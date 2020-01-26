@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace RESTful_practice.Migrations
 {
     [DbContext(typeof(CourseLibraryContext))]
-    [Migration("20200125204245_AddDateOfDeathToAuthor")]
-    partial class AddDateOfDeathToAuthor
+    [Migration("20200126204613_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
