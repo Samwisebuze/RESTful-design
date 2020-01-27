@@ -19,6 +19,7 @@ namespace CourseLibrary.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/authors/{authorId}/courses")]
+    [ResponseCache(CacheProfileName = "240SecondsCacheProfile")]
     public class CoursesController : ControllerBase // We can also inherit Controller, but that adds view support which is not necessary 
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
@@ -63,6 +64,7 @@ namespace CourseLibrary.API.Controllers
 
         [HttpGet("{courseId:guid}", Name = "GetCourseForAuthor")]
         [HttpHead]
+        [ResponseCache(Duration = 120)]
         public IActionResult GetCourseForAuthor(
             [FromRoute]Guid authorId,
             [FromRoute]Guid courseId,

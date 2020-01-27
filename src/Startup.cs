@@ -26,14 +26,22 @@ namespace CourseLibrary.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddResponseCaching();
+
             services.AddControllers(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
+                setupAction.CacheProfiles.Add(
+                    "240SecondsCacheProfile",
+                    new CacheProfile()
+                    {
+                        Duration = 240
+                    });
             })
             .AddXmlDataContractSerializerFormatters()
             .AddNewtonsoftJson(setupAction =>
             {
-                setupAction.SerializerSettings.ContractResolver = 
+                setupAction.SerializerSettings.ContractResolver =
                     new CamelCasePropertyNamesContractResolver();
             })
             .ConfigureApiBehaviorOptions(setupAction =>
@@ -62,10 +70,10 @@ namespace CourseLibrary.API
             {
                 var newtonsoftJsonOutputFormatter = config.OutputFormatters
                     .OfType<NewtonsoftJsonOutputFormatter>()?.FirstOrDefault();
-                
-                if( newtonsoftJsonOutputFormatter != null)
+
+                if (newtonsoftJsonOutputFormatter != null)
                 {
-                    newtonsoftJsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.marvin.hateoas+json");   
+                    newtonsoftJsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.marvin.hateoas+json");
                 }
             });
 
@@ -98,6 +106,8 @@ namespace CourseLibrary.API
                     });
                 });
             }
+
+            app.UseResponseCaching();
 
             app.UseRouting();
 
