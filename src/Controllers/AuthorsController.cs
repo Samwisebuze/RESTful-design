@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Linq;
 using Microsoft.Net.Http.Headers;
+using CourseLibrary.API.ActionConstraints;
 
 namespace CourseLibrary.API.Controllers
 {
@@ -161,13 +162,42 @@ namespace CourseLibrary.API.Controllers
         }
 
         [HttpPost(Name = "CreateAuthor")]
-        public ActionResult<AuthorDto> CreateAuthor(
+        [RequestHeaderMatchesMediaType("Content-Type",
+            "application/json",
+            "application/vnd.marvin.authorforcreation+json")]
+        [Consumes("application/json",
+            "application/vnd.marvin.authorforcreation+json")]
+        public IActionResult CreateAuthor(
             [FromBody]AuthorForCreationDto author,
             [FromHeader(Name = "Accept")]string mediaType)
         {
-            if (!IsSupportedMediaType(mediaType, out MediaTypeHeaderValue parsedMediaType))
-                return BadRequest();
+            var authorEntity = _mapper.Map<Entities.Author>(author);
+            _courseLibraryRepository.AddAuthor(authorEntity);
+            _courseLibraryRepository.Save();
 
+            var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
+
+            var links = CreateLinksForAuthor(authorToReturn.Id, string.Empty);
+
+            var linkedResourceToReturn = authorToReturn.ShapeData(string.Empty)
+                as IDictionary<string, object>;
+
+            linkedResourceToReturn.Add("links", links);
+
+            return CreatedAtRoute(
+                routeName: "GetAuthor",
+                routeValues: new { authorId = linkedResourceToReturn["Id"] },
+                value: linkedResourceToReturn);
+        }
+
+
+        [HttpPost(Name = "CreateAuthorWithDateOfDeath")]
+        [RequestHeaderMatchesMediaType("Content-Type",
+            "application/vnd.marvin.authorforcreationwithdateofdeath+json")]
+        [Consumes("application/vnd.marvin.authorforcreationwithdateofdeath+json")]
+        public IActionResult CreateAuthorWithDateOfDeath(
+            [FromBody]AuthorForCreationWithDateOfDeath author)
+        {
 
             var authorEntity = _mapper.Map<Entities.Author>(author);
             _courseLibraryRepository.AddAuthor(authorEntity);
@@ -175,32 +205,28 @@ namespace CourseLibrary.API.Controllers
 
             var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
 
-            if (parsedMediaType.MediaType == "application/vnd.marvin.hateoas+json")
-            {
-                var links = CreateLinksForAuthor(authorToReturn.Id, string.Empty);
+            var links = CreateLinksForAuthor(authorToReturn.Id, string.Empty);
 
-                var linkedResourceToReturn = authorToReturn.ShapeData(string.Empty)
-                    as IDictionary<string, object>;
+            var linkedResourceToReturn = authorToReturn.ShapeData(string.Empty)
+                as IDictionary<string, object>;
 
-                linkedResourceToReturn.Add("links", links);
-
-                return CreatedAtRoute(
-                    routeName: "GetAuthor",
-                    routeValues: new { authorId = linkedResourceToReturn["Id"] },
-                    value: linkedResourceToReturn);
-            }
+            linkedResourceToReturn.Add("links", links);
 
             return CreatedAtRoute(
-                    routeName: "GetAuthor",
-                    routeValues: new { authorId = authorToReturn.Id },
-                    value: authorToReturn);
+                routeName: "GetAuthor",
+                routeValues: new { authorId = linkedResourceToReturn["Id"] },
+                value: linkedResourceToReturn);
         }
 
         [HttpOptions]
         public IActionResult GetAuthorsOptions()
         {
             Response.Headers.Add("Allow",
-                string.Join(',', new[] { HttpMethods.Get, HttpMethods.Options, HttpMethods.Post }));
+                string.Join(',', new[] { 
+                    HttpMethods.Get, 
+                    HttpMethods.Options, 
+                    HttpMethods.Post, 
+                    HttpMethods.Delete}));
             return Ok();
         }
 
